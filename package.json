@@ -2,11 +2,11 @@
   "name": "fake-itunes-api",
   "version": "1.0.0",
   "description": "Fake iTunes API server for testing",
-  "main": "fake-api-server.js",
+  "main": "api/search.js",
   "scripts": {
     "start": "node fake-api-server.js",
     "dev": "nodemon fake-api-server.js",
-    "vercel-build": "echo 'Building for Vercel'"
+    "build": "echo 'No build needed for serverless functions'"
   },
   "dependencies": {
     "express": "^4.18.2",
