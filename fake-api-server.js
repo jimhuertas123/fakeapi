@@ -7,7 +7,7 @@ const app = express();
 const PORT = 3001;
 
 app.use(cors({
-  origin: 'https://itunes-react-git-main-jimhuertas123s-projects.vercel.app/'
+  origin: 'https://itunes-react-git-main-jimhuertas123s-projects.vercel.app'
 }));
 
 let musicData;
