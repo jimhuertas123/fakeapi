@@ -1,16 +1,5 @@
-const fs = require('fs');
-const path = require('path');
-
-let musicData;
-try {
-  const dataPath = path.join(process.cwd(), 'public', 'data.json');
-  musicData = JSON.parse(fs.readFileSync(dataPath, 'utf8'));
-} catch (error) {
-  console.error('Error loading data.json:', error);
-}
-
 module.exports = (req, res) => {
-  // Enable CORS for multiple origins
+  // Enable CORS for root route
   const allowedOrigins = [
     'https://itunes-react.vercel.app',
     'https://itunes-react-git-main-jimhuertas123s-projects.vercel.app',
@@ -22,21 +11,24 @@ module.exports = (req, res) => {
   if (allowedOrigins.includes(origin)) {
     res.setHeader('Access-Control-Allow-Origin', origin);
   } else {
-    res.setHeader('Access-Control-Allow-Origin', '*'); // Allow all for testing
+    res.setHeader('Access-Control-Allow-Origin', '*');
   }
   
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
-  res.setHeader('Access-Control-Allow-Credentials', 'true');
 
   if (req.method === 'OPTIONS') {
     res.status(200).end();
     return;
   }
 
-  res.json({ 
-    status: 'ok', 
-    totalSongs: musicData?.results?.length || 0,
-    timestamp: new Date().toISOString()
+  res.json({
+    message: 'Fake iTunes API Server',
+    version: '1.0.0',
+    endpoints: {
+      health: '/api/health',
+      search: '/api/search?term=YOUR_QUERY'
+    },
+    example: 'https://fakeapi-delta.vercel.app/api/search?term=love&limit=5'
   });
 };
