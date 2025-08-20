@@ -31,10 +31,8 @@ module.exports = async (req, res) => {
   console.log(`🔍 Search request: term="${term}", limit="${limit}"`);
 
   try {
-    const { query } = req.query;
-
     const access_token = await getAccessToken();
-    const searchResponse = await fetch(`https://api.spotify.com/v1/search?q=${query}&type=track&limit=${limit}`, {
+    const searchResponse = await fetch(`https://api.spotify.com/v1/search?q=${term}&type=track&limit=${limit}`, {
       headers: {
         'Authorization': `Bearer ${access_token}`
       }
@@ -48,48 +46,3 @@ module.exports = async (req, res) => {
     return res.status(500).json({ error: 'Failed to fetch from iTunes API' });
   }
 };
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-const CLIENT_ID = process.env.CLIENT_ID;
-const CLIENT_SECRET = process.env.CLIENT_SECRET;
-
-export default async function handler(req, res) {
-  
-  const { query } = req.query;
-  
-  const tokenResponse = await fetch('https://accounts.spotify.com/api/token', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/x-www-form-urlencoded',
-      'Authorization': `Basic ${Buffer.from(`${CLIENT_ID}:${CLIENT_SECRET}`).toString('base64')}`
-    },
-    body: 'grant_type=client_credentials'
-  });
-  
-  const { access_token } = await tokenResponse.json();
-  
-  // Step 2: Search Spotify with the token
-  const searchResponse = await fetch(`https://api.spotify.com/v1/search?q=${query}&type=track&limit=20`, {
-    headers: {
-      'Authorization': `Bearer ${access_token}`
-    }
-  });
-  
-  const searchData = await searchResponse.json();
-  res.json(searchData);
-}

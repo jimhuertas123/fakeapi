@@ -8,7 +8,7 @@ let cachedToken = null;
 let tokenExpiry = null;
 
 //valid access token expiration
-export async function getAccessToken() {
+async function getAccessToken() {
   if (cachedToken && tokenExpiry && Date.now() < tokenExpiry - 5 * 60 * 1000) {
     console.log('🔄 Using cached token');
     return cachedToken;
@@ -36,3 +36,5 @@ export async function getAccessToken() {
     throw error;
   }
 }
+
+module.exports = getAccessToken;
