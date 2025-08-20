@@ -1,31 +1,23 @@
 const fs = require('fs');
 const path = require('path');
-
-let musicData;
-try {
-  const dataPath = path.join(process.cwd(), 'public', 'data.json');
-  musicData = JSON.parse(fs.readFileSync(dataPath, 'utf8'));
-} catch (error) {
-  console.error('Error loading data.json:', error);
-}
+const getAccessToken = require('./getAcessToken');
 
 module.exports = async (req, res) => {
-  // Enable CORS for multiple origins
+  //CORS for multiple origins
   const allowedOrigins = [
     'https://itunes-react.vercel.app',
     'https://itunes-react-git-main-jimhuertas123s-projects.vercel.app',
-    'http://localhost:3000',
-    'http://localhost:3001'
+    'http://localhost:5173',
   ];
   
   const origin = req.headers.origin;
   if (allowedOrigins.includes(origin)) {
     res.setHeader('Access-Control-Allow-Origin', origin);
   } else {
-    res.setHeader('Access-Control-Allow-Origin', '*'); // Allow all for testing
+    res.setHeader('Access-Control-Allow-Origin', '*');
   }
   
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
   res.setHeader('Access-Control-Allow-Credentials', 'true');
 
@@ -34,56 +26,70 @@ module.exports = async (req, res) => {
     return;
   }
 
-  const { term = '', limit = 50, media = 'music', deploy = 'false' } = req.query;
-  const USE_REAL_API = deploy === 'true';
+  //getters from request
+  const { term = '', limit = 50 } = req.query;
+  console.log(`🔍 Search request: term="${term}", limit="${limit}"`);
 
-  console.log(`🔍 Search request: term="${term}", limit="${limit}", media=${media}`);
+  try {
+    const { query } = req.query;
 
-  if (USE_REAL_API) {
-    try {
-      const apiUrl = `https://itunes.apple.com/search?term=${term}&limit=${limit}&media=${media}`;
-      const response = await fetch(apiUrl);
-      const data = await response.json();
-
-      console.log(`✅ Real API returned ${data.resultCount || 0} results`);
-      return res.json(data);
-
-    } catch (error) {
-      console.error('Error fetching from real API:', error);
-      return res.status(500).json({ error: 'Failed to fetch from iTunes API' });
-    }
-  } else {
-    try {
-      let filteredResults = musicData.results;
-
-      // Filter by search term if provided
-      if (term) {
-        const searchTerm = String(term).toLowerCase();
-        filteredResults = musicData.results.filter(item =>
-          item.trackName?.toLowerCase().includes(searchTerm) ||
-          item.artistName?.toLowerCase().includes(searchTerm) ||
-          item.collectionName?.toLowerCase().includes(searchTerm) ||
-          item.primaryGenreName?.toLowerCase().includes(searchTerm)
-        );
+    const access_token = await getAccessToken();
+    const searchResponse = await fetch(`https://api.spotify.com/v1/search?q=${query}&type=track&limit=${limit}`, {
+      headers: {
+        'Authorization': `Bearer ${access_token}`
       }
+    });
+    
+    const searchData = await searchResponse.json();
+    res.json(searchData);
 
-      // Limit results
-      const limitNum = parseInt(String(limit));
-      if (limitNum > 0) {
-        filteredResults = filteredResults.slice(0, limitNum);
-      }
-
-      const response = {
-        resultCount: filteredResults.length,
-        results: filteredResults
-      };
-
-      console.log(`✅ Returning ${filteredResults.length} results from local data`);
-      res.json(response);
-
-    } catch (error) {
-      console.error('Error processing request:', error);
-      res.status(500).json({ error: 'Internal server error' });
-    }
+  } catch (error) {
+    console.error('Error fetching from real API:', error);
+    return res.status(500).json({ error: 'Failed to fetch from iTunes API' });
   }
 };
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+const CLIENT_ID = process.env.CLIENT_ID;
+const CLIENT_SECRET = process.env.CLIENT_SECRET;
+
+export default async function handler(req, res) {
+  
+  const { query } = req.query;
+  
+  const tokenResponse = await fetch('https://accounts.spotify.com/api/token', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded',
+      'Authorization': `Basic ${Buffer.from(`${CLIENT_ID}:${CLIENT_SECRET}`).toString('base64')}`
+    },
+    body: 'grant_type=client_credentials'
+  });
+  
+  const { access_token } = await tokenResponse.json();
+  
+  // Step 2: Search Spotify with the token
+  const searchResponse = await fetch(`https://api.spotify.com/v1/search?q=${query}&type=track&limit=20`, {
+    headers: {
+      'Authorization': `Bearer ${access_token}`
+    }
+  });
+  
+  const searchData = await searchResponse.json();
+  res.json(searchData);
+}

@@ -1,4 +1,5 @@
 fake-api-server.js
+fake-api-spotify.js
 node_modules
 .env
 .DS_Store

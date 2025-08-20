@@ -7,7 +7,8 @@ const app = express();
 const PORT = 3001;
 
 app.use(cors({
-  origin: 'https://itunes-react-git-main-jimhuertas123s-projects.vercel.app'
+  // origin: 'https://itunes-react-git-main-jimhuertas123s-projects.vercel.app'
+  origin: 'http://localhost:5173'
 }));
 
 let musicData;
@@ -19,12 +20,50 @@ try {
   process.exit(1);
 }
 
+function normalizeAppleResponse(appleSong) {
+  return {
+    trackId: appleSong.id || appleSong.trackId,
+    trackName: appleSong.name || appleSong.trackName,
+    artistName: appleSong.artistName,
+    artistViewUrl: appleSong.artistUrl || appleSong.artistViewUrl,
+    artworkUrl100: appleSong.artworkUrl100,
+    collectionName: appleSong.collectionName || null,
+    collectionViewUrl: appleSong.url || appleSong.collectionViewUrl,
+    previewUrl: appleSong.previewUrl || null,
+    primaryGenreName: appleSong.genres && appleSong.genres.length > 0 ? appleSong.genres[0].name : appleSong.primaryGenreName,
+    releaseDate: appleSong.releaseDate,
+    kind: appleSong.kind || appleSong.wrapperType,
+    trackPrice: appleSong.trackPrice || null,
+    trackExplicitness: appleSong.trackExplicitness || null,
+    isStreamable: appleSong.isStreamable || null,
+    // add other fields as needed
+  };
+}
+
 app.get('/api/search', async (req, res) => {
   const { term = '', limit = 50, media = 'music', deploy='false'} = req.query;
   const USE_REAL_API = deploy === 'true';
 
   console.log(`🔍 Search request: term="${term}", limit="${limit}", media=${media}`);
   
+
+  if(term === ""){
+    console.log('🐟 Starting Empty Query');
+    
+    const apiUrl  = "https://rss.applemarketingtools.com/api/v2/us/music/most-played/50/songs.json";
+    const response = await fetch(apiUrl);
+    const result = await response.json();
+    const responseNormalized = {
+      resultCount: result.feed.results.length,
+      results: []
+    };
+
+    result.feed.results.map( (songItem) => { responseNormalized.results.push( normalizeAppleResponse(songItem) ) } )
+
+    console.log(`✅ Empty query so Apple API returned ${result.feed.results.length || 0} results (normalized)`);
+    return res.json(responseNormalized);
+  }
+
   if (USE_REAL_API) {
     try {
       const apiUrl = `https://itunes.apple.com/search?term=${term}&limit=${limit}&media=${media}`;

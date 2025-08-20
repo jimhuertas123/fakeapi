@@ -10,19 +10,18 @@ try {
 }
 
 module.exports = (req, res) => {
-  // Enable CORS for multiple origins
+  //CORS for multiple origins
   const allowedOrigins = [
     'https://itunes-react.vercel.app',
     'https://itunes-react-git-main-jimhuertas123s-projects.vercel.app',
-    'http://localhost:3000',
-    'http://localhost:3001'
+    'http://localhost:5173',
   ];
   
   const origin = req.headers.origin;
   if (allowedOrigins.includes(origin)) {
     res.setHeader('Access-Control-Allow-Origin', origin);
   } else {
-    res.setHeader('Access-Control-Allow-Origin', '*'); // Allow all for testing
+    res.setHeader('Access-Control-Allow-Origin', '*');
   }
   
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
